@@ -1,0 +1,1 @@
+{"cluster": "pod:aidc-t14", "namespace": "balsamalahmari", "pod": "serving", "image": "balsamalahmari/aidc-serving:cpu-v1", "node": "aidc-t14", "chat_status": 200}
