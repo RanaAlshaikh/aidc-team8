@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-a
+  labels:
+    app: refused
+spec:
+  containers:
+    - name: serving
+      image: busybox:this-tag-does-not-exist
+      command: ["sleep", "3600"]

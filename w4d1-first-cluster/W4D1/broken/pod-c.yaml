@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-c
+  labels:
+    app: refused
+spec:
+  containers:
+    - name: serving
+      image: ranaalshaikh/aidc-serving:cpu-v1
+      command: ["python", "-c", "import sys; sys.exit(3)"]
