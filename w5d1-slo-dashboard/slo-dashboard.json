@@ -1,0 +1,230 @@
+{
+  "uid": "slo-reference",
+  "title": "SLO dashboard: reference solution",
+  "tags": [
+    "aidc",
+    "slo"
+  ],
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Availability (1h)",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 99.0
+              },
+              {
+                "color": "green",
+                "value": 99.5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (1 - (sum(rate(aidc_requests_total{route=\"/v1/chat/completions\",code=~\"5..\"}[1h])) or vector(0)) / clamp_min(sum(rate(aidc_requests_total{route=\"/v1/chat/completions\"}[1h])), 1e-9))"
+        }
+      ],
+      "description": "Are we keeping the promise we published, this hour?"
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "e2e p95 (5m)",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(aidc_request_latency_seconds_bucket[5m])))"
+        }
+      ],
+      "description": "How does the service feel right now, at the tail a user notices?"
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Requests / min",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(aidc_requests_total{route=\"/v1/chat/completions\"}[5m])) * 60"
+        }
+      ],
+      "description": "How much traffic are we actually carrying?"
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Error rate (5m)",
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * (sum(rate(aidc_requests_total{route=\"/v1/chat/completions\",code=~\"5..\"}[5m])) or vector(0)) / clamp_min(sum(rate(aidc_requests_total{route=\"/v1/chat/completions\"}[5m])), 1e-9)"
+        }
+      ],
+      "description": "How wrong are we going, right now?"
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Latency percentiles",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 12,
+        "h": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 2,
+          "custom": {
+            "fillOpacity": 12,
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(aidc_request_latency_seconds_bucket[5m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(aidc_request_latency_seconds_bucket[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(aidc_request_latency_seconds_bucket[5m])))",
+          "legendFormat": "p99"
+        }
+      ],
+      "description": "Is the whole latency distribution moving, or only its tail?"
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Traffic by status",
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 12,
+        "h": 10
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 2,
+          "custom": {
+            "fillOpacity": 12,
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (code) (rate(aidc_requests_total{route=\"/v1/chat/completions\"}[5m])) * 60",
+          "legendFormat": "{{code}}"
+        }
+      ],
+      "description": "What is the traffic made of, and when did that change?"
+    }
+  ],
+  "description": "Reference solution for W5D1, not the artifact you submit: build your own and save it as 'Team SLOs'. Tier-0 exprs over the app's aidc_* series. Tier 1: swap to vLLM's vllm: families (vllm:e2e_request_latency_seconds_bucket, vllm:request_success_total, vllm:num_requests_running, vllm:gpu_cache_usage_perc) for the same panel shapes. Keep the colons: Prometheus stores the name vLLM publishes, so the underscore spellings return no data and draw as empty panels."
+}
